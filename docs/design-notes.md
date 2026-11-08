@@ -100,3 +100,24 @@ Rule 1 “Reservations uses only the public contracts of other modules” failed
 - Tests: 8 passed (`python -m unittest -v`), and `lint-imports`: 3 kept, 0 broken.
 - Demo: the same nine lines as in Before (`python main.py`).
 - Race: still double-booking: Maya Accepted R101, Omar Accepted R102 (`python main.py --race`).
+
+# P07 design notes
+
+## API decisions
+
+- The free rooms come in text order of the room number, so R10 comes before R7, and “after” compares the room numbers as text too.
+- A client compares an error by its title (for example Unavailable); detail is only a sentence for people and may change.
+- The room type is not a fixed list in the API: it is catalog data from the rooms table (Standard, Deluxe, …), so a new type needs no API change.
+
+## API tests
+
+- Search: GET /rooms/availability?checkIn=2026-11-12&checkOut=2026-11-14 → 200 with R7 and R8, "next": null.
+- Book, then book again: POST Maya for R7 12–14 Nov → 201 {"id":"R101","status":"Confirmed","notificationFailed":false}; POST Omar for R7 13–15 Nov → 409 Unavailable.
+- Wrong dates: POST with checkOut equal to checkIn (R8, 15–15 Nov) → 400 InvalidDates as application/problem+json.
+- Cancel twice: POST Maya, then DELETE /reservations/R101 → 204, and again → 404 NotFound.
+
+## After
+
+- Checks: 15 green: 12 tests (8 behaviour + 4 API) and `lint-imports`: 3 kept, 0 broken.
+- The seven answers: all seven requests in docs/api-check.md answered exactly as expected (✓ 1–7).
+- Restart check: Maya's second booking R102 survived the restart; the search after it shows only R8, and the table has R101 Cancelled and R102 Confirmed.
