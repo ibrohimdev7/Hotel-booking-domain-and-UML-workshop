@@ -1,11 +1,5 @@
-"""Hotel booking app after P04: the P03 app split into modules, with its dependencies behind protocols."""
-from hotel_booking.booking import BookingResult, BookingService
-from hotel_booking.domain import DateRange, Guest, Reservation, ReservationStatus, Room
-from hotel_booking.notifications import EmailNotificationSender, NotificationSender, SmsNotificationSender
-from hotel_booking.stores import InMemoryReservationStore, ReservationStore
+"""Hotel booking app after P06: one app with four modules (rooms, reservations, payments, notifications).
 
-__all__ = [
-    "BookingResult", "BookingService", "DateRange", "EmailNotificationSender", "Guest",
-    "InMemoryReservationStore", "NotificationSender", "Reservation", "ReservationStatus",
-    "ReservationStore", "Room", "SmsNotificationSender",
-]
+Each module's __init__.py is its public contract; internal.py holds the code only its own module
+and main.py may import. pyproject.toml lists the borders that lint-imports checks.
+"""

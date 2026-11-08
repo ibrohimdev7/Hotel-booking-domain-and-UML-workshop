@@ -67,3 +67,36 @@ Must stay the same:
 - Race: `python main.py --race` → still double-booked: Maya Accepted R101, Omar Accepted R102, 2 Confirmed reservations for R7.
 
 After Step 7: the R6 test failed first (RuntimeError: The mail server is down.), then passed after the change in Reserve; SmsNotificationSender was added without editing BookingService. `python -m unittest -v` → 8 of 8 passed.
+
+# P06 design notes
+
+## Before
+
+- Tests: 8 passed (`python -m unittest -v`).
+- Demo: the nine lines from P04 (`python main.py`).
+- Race: still double-booking: Maya Accepted R101, Omar Accepted R102 (`python main.py --race`).
+
+## Modules
+
+| Module | Public contract (others may use) | Internal code (only the module, the wiring and the tests) |
+|---|---|---|
+| Rooms | Room, the room catalog promise | InMemoryRoomCatalog |
+| Reservations | BookingService, BookingResult, Reservation, DateRange, Guest, ReservationStatus, the store promise | InMemoryReservationStore |
+| Payments | PaymentStatus, the payment service promise | SimulatedPaymentService |
+| Notifications | Confirmation, the notification sender promise | EmailNotificationSender, SmsNotificationSender |
+
+## Architecture rules
+
+1. Reservations uses only the public contracts of other modules: BookingService may use the Notifications contract, never the email sender.
+2. Rooms does not depend on any other module: Rooms knows nothing about reservations, money or messages.
+3. Payments and Notifications do not depend on Reservations: the arrows point one way, from Reservations outwards.
+
+## Broken on purpose
+
+Rule 1 “Reservations uses only the public contracts of other modules” failed (Contracts: 2 kept, 1 broken); the message named hotel_booking.reservations.booking -> hotel_booking.notifications.internal (l.8), the line that imported EmailNotificationSender.
+
+## After
+
+- Tests: 8 passed (`python -m unittest -v`), and `lint-imports`: 3 kept, 0 broken.
+- Demo: the same nine lines as in Before (`python main.py`).
+- Race: still double-booking: Maya Accepted R101, Omar Accepted R102 (`python main.py --race`).
