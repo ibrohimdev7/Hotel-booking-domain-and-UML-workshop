@@ -38,3 +38,32 @@ Double booking! Both requests checked before either one saved.
 ```
 
 What happened: both Maya's and Omar's requests asked the store while it was still empty, both got “false” and both saved, so R7 now has two Confirmed bookings for the same nights and R3 is broken. The problem appears in `Reserve` between `store.HasOverlap(room, stay)` (the check) and `store.Save(reservation)` (the act): during that gap the other request checks too and acts on an answer that is already out of date.
+
+# P04 design notes
+
+## Refactoring
+
+A refactoring changes how the code is organised (names, files, which class depends on which) but must not change what the app answers to any request.
+
+Must stay the same:
+
+- The tests from Step 2: all 6 still pass after every move.
+- The demo output: the same nine lines as in P03.
+- The race demo: still “Double booking!”, because refactoring does not fix bugs.
+
+## What our code breaks
+
+- BookingService asks for exactly ReservationStore (D: dependency inversion).
+  In P07 we would have to edit BookingService just to use a database.
+- BookingService asks for exactly EmailSender (D and O: dependency inversion, open/closed).
+  To send SMS we would have to open BookingService and change its constructor and Reserve(), and in the tests we cannot plug in a sender that fails, so we cannot prove that a failed email keeps the booking.
+- All nine classes live in one file, hotel_booking.py (S: single responsibility).
+  Every change touches the same file and it is hard to find the class you need.
+
+## Proof
+
+- Tests: `python -m unittest -v` → 6 of 6 passed after the refactoring, and no test body changed (only the import and `new_service()`).
+- Demo: `python main.py` → the same nine lines as P03 (checked line by line with `diff` against the P03 output).
+- Race: `python main.py --race` → still double-booked: Maya Accepted R101, Omar Accepted R102, 2 Confirmed reservations for R7.
+
+After Step 7: the R6 test failed first (RuntimeError: The mail server is down.), then passed after the change in Reserve; SmsNotificationSender was added without editing BookingService. `python -m unittest -v` → 8 of 8 passed.

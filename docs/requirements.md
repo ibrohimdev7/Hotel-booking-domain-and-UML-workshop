@@ -55,3 +55,11 @@ A booking can be looked up by its id.
 Check: R101 → Maya, R7, 12-14 November, Confirmed.
 
 Proof: Maya cancels R101: True (Cancel first looks R101 up by its id with ReservationStore.Find; an unknown id would give False)
+
+## R6 · Failed message
+
+If the confirmation cannot be sent, the booking stays saved and Accepted, and the failure is reported.
+
+Check: the mail server is down and Maya books R7 for 12-14 November → Accepted R101, notification failed, 1 reservation saved.
+
+Proof: test_a_failed_confirmation_keeps_the_booking ... ok
